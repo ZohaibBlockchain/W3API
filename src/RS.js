@@ -196,8 +196,8 @@ app.post('/uservalidation', async (req, res) => {
 //w3Engine();//
 // registerTrade({ userId: '5', walletAddress: 'info.walletAddress', tokenAmount: 500, tokenName: 'info.ShitCoin', instrumentType: 'Cash',tokenSymbol:'BTC'})
 
-var objectId =  {id:'634964f21afadb8df07b3293'};
-updateDocument({id:objectId,transactionHash:'xxxx',collectionName:'trades'});
+// var objectId =  {id:'634964f21afadb8df07b3293'};
+// updateDocument({id:objectId,transactionHash:'xxxx',collectionName:'trades'});
 //-----------Tests--------
 
 
