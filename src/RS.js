@@ -1,4 +1,5 @@
-import e from 'express';
+//Beta version 1.1 of W3API...
+
 import express from 'express';
 const bodyParser = require('body-parser');
 const mongoose = require("mongoose");
@@ -139,16 +140,25 @@ app.get('/', (req, res) => {
 
 
 
-app.post('/cnt', (req, res) => {
-  let Info = req.body;
-  if (Info.token == process.env.ADMINTOKEN) {
+// app.post('/cnt', (req, res) => {
+//   let Info = req.body;
+//   if (Info.token == process.env.ADMINTOKEN) {
 
 
-  }
-  else {
-    console.log('Invalid Token');
-    res.status(200).send('Invalid Token');
-  }
+//   }
+//   else {
+//     console.log('Invalid Token');
+//     res.status(200).send('Invalid Token');
+//   }
+// });
+
+
+
+
+app.post('/getTokenAddress', async (req, res) => {
+  let info = req.body;
+ let result = await getTokenAddress(info.name,info.instrumentType);
+  res.send(result);
 });
 
 
@@ -264,5 +274,4 @@ async function w3Engine() {
 
 //---------ExecutionBlock------
 
-
-////mongodb://localhost:27017/4NX
+//

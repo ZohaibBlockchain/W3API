@@ -57,7 +57,7 @@ async function getTokenAddress(name,instrumentType)
       fContractInfo.factoryABI,
       wallet
     );
-    return await contract.getAddressByName(name,instrumentType);
+    return await contract.getAddress(name,instrumentType);
   }else{
     return null;
   }
