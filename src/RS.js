@@ -6,9 +6,9 @@ import { UserModel, TokenModel, TradeModel } from '../schemas';
 require('dotenv').config();
 import { createNewToken, userValidation, getTokenAddress, createNewAndMint, mintNewToken, burnTokens } from './web3';
 const decimal = 6;
-var Trades = [];
-//Trades.pop will happend when trade will be completed...
-//Trades.push will add item into array...
+const ip = require('ip');
+const ipAddress = ip.address();
+
 
 let x = mongoose.Types.ObjectId('634964f21afadb8df07b3293');
 
@@ -92,6 +92,7 @@ const envport = process.env.SERVERPORT;
 var app = express();
 app.listen(envport, function () {
   console.log(`The SERVER HAS STARTED ON PORT: ${envport}`);
+  console.log(ipAddress);
 })
 
   .on("error", function (err) {
@@ -198,6 +199,7 @@ app.post('/uservalidation', async (req, res) => {
 
 // var objectId =  {id:'634964f21afadb8df07b3293'};
 // updateDocument({id:objectId,transactionHash:'xxxx',collectionName:'trades'});
+
 //-----------Tests--------
 
 
@@ -261,3 +263,6 @@ async function w3Engine() {
 //---------ExecutionBlock------
 
 //---------ExecutionBlock------
+
+
+////mongodb://localhost:27017/4NX
