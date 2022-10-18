@@ -31,7 +31,7 @@ const ipAddress = ip.address();
 
 const mongoDB = process.env.DBKEY.toString();
 mongoose
-  .connect("mongodb://localhost:27017/acmedb", { useNewUrlParser: true })
+  .connect(process.env.DBKEY, { useNewUrlParser: true })
   .then(() => {
     //-----------Express----------
     const envport = process.env.SERVERPORT;
