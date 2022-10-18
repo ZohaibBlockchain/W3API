@@ -11,8 +11,10 @@ const user = new Schema({
 
 const token = new Schema({
   name: String,
+  instrumentType:String,
   address: String,
-  iconuri: String,
+  iconuri: String
+ 
 });
 
 
