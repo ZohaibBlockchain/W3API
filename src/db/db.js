@@ -1,5 +1,5 @@
-import { createNewToken, userValidation, getTokenAddress, createNewAndMint, mintNewToken, burnTokens } from '../../web3';
-import { UserModel, TokenModel, TradeModel } from '../../../schemas';
+import { createNewToken, userValidation, getTokenAddress, createNewAndMint, mintNewToken, burnTokens } from '../web3';
+import { UserModel, TokenModel, TradeModel } from '../../schemas';
 
 
 
@@ -19,7 +19,31 @@ export async function getUserWallet(_userUId) {
   }
   
   
+  export async function AddNewUser(userData) {
+    const NewUser = new UserModel({ userUId: userData.uid, userWallet: userData.wallet });
+    NewUser.save().then(() => {
+      console.log('New User Added');
+      return true;
+    });
+  }
   
+
+
+
+
+  export async function registerTrade(info) {
+    const newTrade = new TradeModel({ userId: info.uid, walletAddress: info.walletAddress, tokenAmount: info.tokenAmount, tokenName: info.tokenName, instrumentType: info.instrumentType, completed: false,tokenSymbol:info.tokenSymbol,transactionHash:""});
+    newTrade.save().then(() => {
+      console.log('New Trade Added');
+      return true;
+    });
+  }
+
+
+
+
+
+
 //   export async function checkCount(collectionName) {
 //     let col = db.collection(collectionName);
 //     const count = await col.countDocuments()
@@ -44,22 +68,8 @@ export async function getUserWallet(_userUId) {
 //     return await col.findOneAndUpdate({_id:x},{$set:{transactionHash:args.transactionHash}});
 //   }
   
-  export async function AddNewUser(userData) {
-    const NewUser = new UserModel({ userUId: userData.uid, userWallet: userData.wallet });
-    NewUser.save().then(() => {
-      console.log('New User Added');
-      return true;
-    });
-  }
   
   
-//   export async function registerTrade(info) {
-//     const newTrade = new TradeModel({ userId: info.uid, walletAddress: info.walletAddress, tokenAmount: info.tokenAmount, tokenName: info.tokenName, instrumentType: info.instrumentType, completed: false,tokenSymbol:info.tokenSymbol,transactionHash:""});
-//     newTrade.save().then(() => {
-//       console.log('New Trade Added');
-//       return true;
-//     });
-//   }
   
   
   //---------DBFunction----------
