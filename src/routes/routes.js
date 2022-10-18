@@ -111,11 +111,11 @@ router.get('/grab', (req, res) => {
 
 
   router.get('*', function(req, res){
-    res.send('what???', 404);
+    res.send('Invalid request', 404);
   });
 
 
   router.post('*', function(req, res){
-    res.send('what???', 404);
+    res.send('Invalid request', 404);
   });
   
