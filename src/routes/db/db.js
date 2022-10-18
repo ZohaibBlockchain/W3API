@@ -44,13 +44,13 @@ export async function getUserWallet(_userUId) {
 //     return await col.findOneAndUpdate({_id:x},{$set:{transactionHash:args.transactionHash}});
 //   }
   
-//   export async function AddNewUser(userData) {
-//     const NewUser = new UserModel({ userUId: userData.uid, userWallet: userData.wallet });
-//     NewUser.save().then(() => {
-//       console.log('New User Added');
-//       return true;
-//     });
-//   }
+  export async function AddNewUser(userData) {
+    const NewUser = new UserModel({ userUId: userData.uid, userWallet: userData.wallet });
+    NewUser.save().then(() => {
+      console.log('New User Added');
+      return true;
+    });
+  }
   
   
 //   export async function registerTrade(info) {

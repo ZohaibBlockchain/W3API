@@ -1,5 +1,5 @@
 
-import { getUserWallet } from './db/db';
+import { getUserWallet ,AddNewUser} from './db/db';
 import express from 'express';
 export const router = express.Router();
 import { createNewToken, userValidation, getTokenAddress, createNewAndMint, mintNewToken, burnTokens } from'../web3';
