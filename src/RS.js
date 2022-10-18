@@ -27,8 +27,6 @@ const ipAddress = ip.address();
 
 
 
-
-
 const mongoDB = process.env.DBKEY.toString();
 mongoose
   .connect(process.env.DBKEY, { useNewUrlParser: true })
@@ -37,6 +35,7 @@ mongoose
     const envport = process.env.SERVERPORT;
     var app = express();
 
+ 
     app.use(router);
     app
       .listen(envport, function () {
@@ -63,9 +62,15 @@ mongoose
 
 
 
+  process.on('uncaughtException', function (err) {
+    console.error(err);
+    console.log("Node NOT Exiting...");
+  });
 
-
-
+  process.on('TypeError', function (err) {
+    console.error(err);
+    console.log("Node NOT Exiting...");
+  });
 
 
 
