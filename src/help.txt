@@ -1,3 +1,0 @@
-sudo pkill node
-
-{"UID":"001","walletAddress":"0x4888e831eaef1f4c4148e839ce23b03a12b96745","Message":{"walletaddress":"0x4888e831eaef1f4c4148e839ce23b03a12b96745","accountuid":"56"},"signedMsg":"0x064c576ea8570850a3c0ace0f644136ac77af2d32971875ab87c8a69c49a126525df7437350cd194e88105b7e23cb737707f6fab714d966cf019438951ed8f431b",}
