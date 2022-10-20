@@ -5,8 +5,8 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const user = new Schema({
-  userUId: String,
-  userWallet: String,
+  userUId: {type:String,unique: true},
+  userWallet: {type:String,unique: true},
 });
 
 const token = new Schema({
@@ -17,6 +17,10 @@ const token = new Schema({
  
 });
 
+
+const defaultIcon = new Schema({
+iconuri: {type:String ,required:true}
+});
 
 const trade = new Schema({
   userId: String,
@@ -32,5 +36,6 @@ const trade = new Schema({
 
 
 export const TradeModel = mongoose.model("Trade", trade);
+export const defaultIconModel = mongoose.model("icon", defaultIcon);0
 export const TokenModel = mongoose.model("Token", token);
 export const UserModel = mongoose.model("User", user);//First is the Name of the collection  2nd is the model

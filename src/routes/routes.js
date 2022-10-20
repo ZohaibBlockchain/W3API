@@ -1,5 +1,5 @@
 
-import { getUserWallet, AddNewUser } from '../db/db';
+import { userExits, UpdateUserWallet, AddNewUser, registerTrade, createDefaultIcon, checkWalletExistence } from '../db/db';
 import express from 'express';
 export const router = express.Router();
 import { createNewToken, userValidation, getTokenAddress, createNewAndMint, mintNewToken, burnTokens } from '../web3';
@@ -24,11 +24,9 @@ const defaultTokenUri = 'https://icons.iconarchive.com/icons/cjdowner/cryptocurr
 
 
 
-router.get('/grab', (req, res) => {
-
-
-  res.status(200).send({ tradeHealth: checkData() });
-  throw new Error('BROKEN') // Express will catch this on its own.
+router.get('/test', (req, res) => {
+  registerTrade({ userId: '5', walletAddress: 'info.walletAddress', tokenAmount: 500, tokenName: 'info.ShitCoin', instrumentType: 'Cash', tokenSymbol: 'BTC' });
+  res.send('Trade Registered Sucessfully');
 })
 
 
@@ -40,19 +38,15 @@ router.get('/', (req, res) => {
 
 
 
+router.post('/createnewicon', async (req, res) => {
+  let info = req.body;
+  let result = await createDefaultIcon(info.uri);
+  console.log(result);
+  res.send(result);
+})
 
 
-// app.post('/cnt', (req, res) => {
-//   let Info = req.body;
-//   if (Info.token == process.env.ADMINTOKEN) {
 
-
-//   }
-//   else {
-//     console.log('Invalid Token');
-//     res.status(200).send('Invalid Token');
-//   }
-// });
 
 
 
@@ -84,33 +78,63 @@ router.post('/tokendetails', async (req, res) => {
 
 
 
-router.post('/uservalidation', async (req, res, next) => {
+router.post('/uservalidation', async (req, res) => {
 
-  let Info = req.body;
+  let info = req.body;
+  const message = info.message;
+  const signedMsg = info.signedMsg;
+if(info.walletAddress === info.message.walletaddress)
+{
 
 
-  const message = Info.message;
-  const signedMsg = Info.signedMsg;
-  let ures = await getUserWallet(Info.UID);
-  if (ures) {
-    res.status(200).send({ status: 'AlreadyExits', userId: Info.UID });
-  } else {
-    let result = userValidation(JSON.stringify(message), signedMsg);
-    result.then(async function (r) {
-      if (r) {
-        console.log(Info.walletaddress);
-        AddNewUser({ uid: Info.UID, wallet: Info.walletAddress }).then(() => {
-          res.status(200).send({ status:'Sucessfully Registered', userId: Info.UID});
-        }).catch((e) => {
-          console.error(e.message); // "oh, no!"
-        });
-      } else {
-        console.log(r);
-        res.status(200).send({ status: 'Fail', userId: Info.UID });
+  let walletcount = await checkWalletExistence(info.walletAddress)
+  if (walletcount == 0)//wallet not exits
+  {
+    let user = await userExits(info.UID)
+    if (user == 0)//user not exits
+    {
+      let result = await userValidation(JSON.stringify(message), signedMsg);
+      if (result) {
+        let _res = await AddNewUser({ uid: info.UID, wallet: info.walletAddress })
+        if (_res) {
+          res.status(200).send({ status: 'Successfully registered a new user' });
+        } else {
+          res.status(400).send({ status: 'Unexpected error while registering user' });
+        }
       }
-    });
+      else {
+        res.status(400).send({ status: 'Invalid user' });
+      }
+    } else {//user exits
+      let result = await userValidation(JSON.stringify(message), signedMsg);
+      if (result) {
+        let result = UpdateUserWallet({ _id: info.UID, address: info.walletAddress })
+        if (result) {
+          res.status(200).send({ status: 'Successfully updated the user' });
+        } else {
+          res.status(400).send({ status: 'Unexpected error while Updating user' });
+        }
+      } else {
+        res.status(400).send({ status: 'Invalid user' });
+      }
+    }
   }
+  else {
+    res.status(200).send({ status: 'Wallet already linked with some other account' });
+  }
+}
+else{
+  res.status(400).send({ status: 'Invalid signature wallet should be same' });
+}
+
+
 })
+
+
+
+
+
+
 
 
 router.get('*', function (req, res) {
