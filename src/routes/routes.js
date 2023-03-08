@@ -1,147 +1,175 @@
-
-import { userExits, UpdateUserWallet, AddNewUser, registerTrade, createDefaultIcon, checkWalletExistence } from '../db/db';
-import express from 'express';
+import {
+  userExits,
+  UpdateUserWallet,
+  getUserInstrumentSettings,
+  AddNewUser,
+  registerTrade,
+  createDefaultIcon,
+  checkWalletExistence,
+  UpdateUserData,
+} from "../db/db";
+import express from "express";
 export const router = express.Router();
-import { createNewToken, userValidation, getTokenAddress, createNewAndMint, mintNewToken, burnTokens } from '../web3';
-const bodyParser = require('body-parser');
+import { getNames, checkType, detectInstrument } from "../../helperFx";
+
+import {
+  getInstrument,
+} from "../web3";
+const bodyParser = require("body-parser");
 router.use(bodyParser.urlencoded({ extended: true }));
 router.use(bodyParser.json());
-router.use(bodyParser.raw())
-
-const defaultTokenUri = 'https://icons.iconarchive.com/icons/cjdowner/cryptocurrency/512/Basic-Attention-Token-icon.png';
-
-
+router.use(bodyParser.raw());
+router.use(express.urlencoded());
+const defaultTokenUri = "https://icons.iconarchive.com/icons/cjdowner/cryptocurrency/512/Basic-Attention-Token-icon.png";
 
 
-
-
-
-
-
-
-
-
-
-
-
-router.get('/test', (req, res) => {
-  registerTrade({ userId: '5', walletAddress: 'info.walletAddress', tokenAmount: 500, tokenName: 'info.ShitCoin', instrumentType: 'Cash', tokenSymbol: 'BTC' });
-  res.send('Trade Registered Sucessfully');
-})
-
-
-
-router.get('/', (req, res) => {
-  res.send('Welcome to W3 REST API!!!');
-});
-
-
-
-
-router.post('/createnewicon', async (req, res) => {
-  let info = req.body;
-  let result = await createDefaultIcon(info.uri);
-  console.log(result);
-  res.send(result);
-})
-
-
-
-
-
-
-
-router.post('/tokenaddress', async (req, res) => {
-  let info = req.body;
-  let result = await getTokenAddress(info.name, info.instrumentType);
-  res.send(result);
-});
-
-
-
-router.post('/tokendetails', async (req, res) => {
-  let info = req.body;
-  let result = await getTokenAddress(info.name, info.instrumentType);
-  let tokenDetails = { name: info.name, instrumentType: info.instrumentType, address: result, icon: defaultTokenUri }
-  res.send(tokenDetails);
+router.get("/", (req, res) => {
+  res.send("Welcome to W3 REST API!!!");
 });
 
 
 
 
 
+router.post("/tokendetails", async (req, res) => {
 
 
-
-
-
-
-
-
-router.post('/uservalidation', async (req, res) => {
-
-  let info = req.body;
-  const message = info.message;
-  const signedMsg = info.signedMsg;
-if(info.walletAddress === info.message.walletaddress)
-{
-
-
-  let walletcount = await checkWalletExistence(info.walletAddress)
-  if (walletcount == 0)//wallet not exits
-  {
-    let user = await userExits(info.UID)
-    if (user == 0)//user not exits
+  //requirement Symbol and walletAddress,Type
+  try {
+    let inf = req.body;
+    if (!checkType(inf.symbol))//For Cash Instruments...
     {
-      let result = await userValidation(JSON.stringify(message), signedMsg);
-      if (result) {
-        let _res = await AddNewUser({ uid: info.UID, wallet: info.walletAddress })
-        if (_res) {
-          res.status(200).send({ status: 'Successfully registered a new user' });
+
+      res.status(200).send({ token: '0x999', tokenDecimal: '6', tokenIcon: 'Null' });
+
+    }
+    else {//CFD Instruments
+
+
+      let userCount = await userExits(inf.walletAddress);
+
+      if (userCount > 0) {
+
+        let userInf = await getUserInstrumentSettings(inf.walletAddress);
+
+
+        let instrumentDetails = detectInstrument(inf.symbol);
+
+        let data = { instrumentName: inf.symbol, tokenSymbol: instrumentDetails.name, instrumentType: instrumentDetails.type };
+        let r = await getInstrument(data);
+        let update = await updateTokenInfo(userInf.Instruments, inf.symbol, userInf._id);
+
+
+        if (update.value == 'Buy') {
+          let tokenDetails = { TokenSymbol: instrumentDetails.name + '.L', TokenAddress: r[0], TokenDecimal: '6', Icon: defaultTokenUri }
+          res.status(200).send(tokenDetails);
+          return;
         } else {
-          res.status(400).send({ status: 'Unexpected error while registering user' });
+          let tokenDetails = { TokenSymbol: instrumentDetails.name + '.S', TokenAddress: r[1], TokenDecimal: '6', Icon: defaultTokenUri }
+          res.status(200).send(tokenDetails);
+          return;
         }
       }
       else {
-        res.status(400).send({ status: 'Invalid user' });
-      }
-    } else {//user exits
-      let result = await userValidation(JSON.stringify(message), signedMsg);
-      if (result) {
-        let result = UpdateUserWallet({ _id: info.UID, address: info.walletAddress })
-        if (result) {
-          res.status(200).send({ status: 'Successfully updated the user' });
-        } else {
-          res.status(400).send({ status: 'Unexpected error while Updating user' });
+        let obj = []; //Initialize with empty Array...
+        let createUser = await AddNewUser({ wallet: inf.walletAddress, instruments: obj });
+
+        if (createUser) {
+          let userInf = await getUserInstrumentSettings(inf.walletAddress);
+          let update = await updateTokenInfo(userInf.Instruments, inf.symbol, userInf._id);
+
+
+          let instrumentDetails = detectInstrument(inf.symbol);
+          let data = { instrumentName: inf.symbol, tokenSymbol: instrumentDetails.name, instrumentType: instrumentDetails.type };
+          console.log(data);
+          let r = await getInstrument(data);
+
+          if (update.value == 'Buy') {
+            let tokenDetails = { TokenSymbol: instrumentDetails.name + '.L', TokenAddress: r[0], TokenDecimal: '6', Icon: defaultTokenUri }
+            res.status(200).send(tokenDetails);
+            return;
+          } else {
+            let tokenDetails = { TokenSymbol: instrumentDetails.name + '.S', TokenAddress: r[1], TokenDecimal: '6', Icon: defaultTokenUri }
+            res.status(200).send(tokenDetails);
+            return;
+          }
         }
-      } else {
-        res.status(400).send({ status: 'Invalid user' });
       }
     }
+  } catch (error) {
+    console.log(error);
+    res.status(400).send('unexpected error TD1');
   }
+  res.status(400).send('unexpected error TD2');
+});
+
+
+
+async function updateTokenInfo(arr, symbol, id) {
+  for (let i = 0; i < arr.length; i++) {
+    if (arr[i].Name == symbol) {
+      let previousValue = arr[i].value;
+      arr[i].value = flipValue(previousValue);
+      let update = await UpdateUserData(arr, id);
+      return { report: update, value: previousValue };
+    }
+  }
+  let obj = { Name: symbol, value: 'Sell' };
+  arr.push(obj);
+  let update = await UpdateUserData(arr, id);
+  return { report: update, value: 'Buy' };
+}
+
+function flipValue(val) {
+  if (val == 'Buy')
+    return 'Sell';
   else {
-    res.status(200).send({ status: 'Wallet already linked with some other account' });
+    return 'Buy';
   }
 }
-else{
-  res.status(400).send({ status: 'Invalid signature wallet should be same' });
-}
 
 
-})
+router.post("/tradeUpdate", async (req, res) => {
+  try {
+    // console.log(req.body);
+    let InofArray = [req.body.Message];
+    let Data = getNames(InofArray)[0];
+    //console.log(Data);
+    let trade = await registerTrade({
+      walletAddress: Data.fullInfo.PartyID,
+      tokenAmount: Data.fullInfo.OrderQty,
+      tokenSymbol: Data.Symbol,
+      instrumentType: Data.type,
+      instrumentName: Data.Name,
+      side: Data.fullInfo.Side,
+      contractMultiplier: Data.fullInfo.ContractMultiplier,
+      orderID: Data.fullInfo.OrderID,
+      execID: Data.fullInfo.ExecID,
+    });
+    if (trade.result === 'Unique') {
 
-
-
-
-
-
-
-
-router.get('*', function (req, res) {
-  res.send('Invalid request', 404);
+      res.status(200).send({ status: "Successfully Submitted" });
+    }
+    else if (trade.result === 'Already exits') {
+      res.status(400).send({ status: "Order already exits" });
+    }
+    else if (trade.result === 'error') {
+      res.status(400).send({ status: "Failed to Execute" });
+    }
+  } catch (error) {
+    res.status(400).send({ status: "Failed to Execute" });
+  }
 });
 
 
-router.post('*', function (req, res) {
-  res.send('Invalid request', 404);
+router.get("*", function (req, res) {
+  res.send("Invalid request", 404);
 });
+
+router.post("*", function (req, res) {
+  res.send("Invalid request", 404);
+});
+
+
+
+

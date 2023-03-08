@@ -1,7 +1,8 @@
 import "ethers";
 import { ethers } from "ethers";
+import { formatEther, formatUnits } from "ethers/lib/utils";
 const fContractInfo = require("./contractABI/factory.json");
-const tContractInfo = require("./contractABI/CAtoken.json");
+const tContractInfo = require("./contractABI/token.json");
 require('dotenv').config();
 
 const account_from = {
@@ -9,6 +10,15 @@ const account_from = {
     process.env.PK,
 };
 
+
+
+// const providerRPC = {
+//   matic: {
+//     name: "Polygon Mainnet",
+//     rpc: "https://polygon-rpc.com/",
+//     chainId: 137, 
+//   },
+// };
 
 
 const providerRPC = {
@@ -28,176 +38,163 @@ const provider = new ethers.providers.StaticJsonRpcProvider(
 );
 
 
-async function userValidation(message, signedMessage) {
-  const signerAddress = ethers.utils.verifyMessage(message, signedMessage);
 
-  const addressFromMessage = message.replace(/\n|\r/g, "").split("Wallet address:").pop().split("Nonce:")[0].trim();
+export async function nonLeverageTradeManager(inf, tokenAddress) {
+//Nothing Right Now
+}
 
-  // const nonce = message.split("Nonce:").pop().trim();
-  let addr = JSON.parse(addressFromMessage);
+async function arrangeAddresses(tokenAddresses) {
+  let tokens = [];
+  let token1 = new ethers.Contract(tokenAddresses[0], tContractInfo.tokenABI, provider);
+  let token2 = new ethers.Contract(tokenAddresses[1], tContractInfo.tokenABI, provider);
+  let name1 = await token1.name.call();
+  name1 = name1.slice(-1);
+  let name2 = await token2.name.call();
+  name2 = name2.slice(-1);
+  if (name1 === 'L') {
+    tokens[0] = tokenAddresses[0];
+  } else {
+    tokens[1] = tokenAddresses[0];
+  }
+  if (name2 === 'S') {
+    tokens[1] = tokenAddresses[1];
+  } else {
+    tokens[0] = tokenAddresses[1];
+  }
+  return tokens;
+}
 
-  const msgAddress = ethers.utils.getAddress(addr.walletaddress);
-  if (signerAddress !== msgAddress) {
-    return false;
+export async function LeverageTradeManager(inf, tokens) {
+  try {
+    const pk = account_from.privateKey.toString();
+    let wallet = new ethers.Wallet(pk, provider);
+    let tokenAddresses = await arrangeAddresses(tokens);
+    let contract = new ethers.Contract(
+      fContractInfo.factoryAddress,
+      fContractInfo.factoryABI,
+      wallet
+    );
+    let tx = await contract.tradeLeverage(tokenAddresses[0], tokenAddresses[1], inf.walletAddress, inf.tokenAmount, getside(inf.side), inf.orderID);
+    let receipt = await tx.wait();
+    return receipt.logs[0].transactionHash;
+  }
+  catch (error) {
+    console.log(error);
+  }
+
+
+}
+
+
+
+function correctInf(inf) {
+
+
+  if (inf[inf.length - 2] === '.') {
+    return inf;
+  } else {
+    return inf + '.L'
+  }
+}
+
+
+
+export async function getInstrument(inf) {
+  try {
+    inf.instrumentName = correctInf(inf.instrumentName);
+    inf.tokenSymbol = correctInf(inf.tokenSymbol);
+    let doubleAddresses = [];
+    const contract = new ethers.Contract(fContractInfo.factoryAddress, fContractInfo.factoryABI, provider);
+    let address1 = await contract.getAddress(inf.instrumentName);
+    address1 = await createOrValidate(address1, inf, inf.instrumentName);
+    let name2 = inf.instrumentName;
+    let symbol = inf.tokenSymbol;
+    name2 = name2.slice(0, -1) + flipChar(name2.slice(-1));
+    symbol = symbol.slice(0, -1) + flipChar(symbol.slice(-1));
+    console.log(name2, symbol);
+    let address2 = await contract.getAddress(name2);
+    address2 = await createOrValidate(address2, inf, name2);
+    if (address1 != null && address2 != null) {
+      doubleAddresses.push(address1);
+      doubleAddresses.push(address2);
+      return doubleAddresses;
+    } else {
+      throw 'Failed to create or fetch the address.';
+    }
+  } catch (error) {
+    console.log(error);
+    return 'retry';
+  }
+}
+
+
+
+
+export async function createOrValidate(address, inf, name) {
+  if (ethers.constants.AddressZero == address) {
+
+    const pk = account_from.privateKey.toString();
+    let wallet = new ethers.Wallet(pk, provider);
+    let contract = new ethers.Contract(
+      fContractInfo.factoryAddress,
+      fContractInfo.factoryABI,
+      wallet
+    );
+    let tx = await contract.deployNewERC20Token(name, inf.tokenSymbol, '6', inf.instrumentType, true);
+    let receipt = await tx.wait();
+    return receipt.logs[0].address;
   }
   else {
-    return true;
-  }
-}
-
-
-
-async function getTokenAddress(name,instrumentType)
-{
-  const pk = account_from.privateKey.toString();
-  let wallet = new ethers.Wallet(pk, provider);
-  if (fContractInfo.factoryAddress) {
-    let contract = new ethers.Contract(
-      fContractInfo.factoryAddress,
-      fContractInfo.factoryABI,
-      wallet
-    );
-    return await contract.getAddress(name,instrumentType);
-  }else{
-    return null;
+    return address;
   }
 }
 
 
 
 
-async function createNewToken(name, symbol, decimal,instrumentType) {
-  const pk = account_from.privateKey.toString();
-  let wallet = new ethers.Wallet(pk, provider);
-  if (fContractInfo.factoryAddress) {
-    let contract = new ethers.Contract(
-      fContractInfo.factoryAddress,
-      fContractInfo.factoryABI,
-      wallet
-    );
-    let deployTokenRes = await contract.deployNewERC20Token(
-      name,
-      symbol,
-      decimal,
-      instrumentType
-    );
-    let res = await provider.waitForTransaction(deployTokenRes.hash, 1, 300000);
-    console.log(res);
-    return res;
-  }
-}
 
+export function checkLeverageInstruments(type) {
 
-async function burnTokens(name, amount, userAddress) {
-  if (userAddress !== undefined) {
-    let wallet = new ethers.Wallet(account_from.privateKey, provider);
+  let _type = splitSymbol(type);
+  for (let i = 0; i < _type.length; i++) {
 
-    console.log(userAddress);
-    if (fContractInfo.factoryAddress) {
-      let contract = new ethers.Contract(
-        fContractInfo.factoryAddress,
-        fContractInfo.factoryABI,
-        wallet
-      );
-      let res = await contract.getAddressByName(name);
-      if (res) {
-        console.log(res);
-        let tokenContract = new ethers.Contract(
-          res,
-          tContractInfo.tokenABI,
-          wallet
-        );
-        let _res = await tokenContract.decimal();
-        const gweiValue = ethers.utils.parseUnits(
-          amount.toString(),
-          _res.toNumber()
-        );
-        console.log(gweiValue);
-        let burnTokenRes = await tokenContract.burn(
-          userAddress.toString(),
-          gweiValue
-        );
-        let __res = await provider.waitForTransaction(
-          burnTokenRes.hash,
-          1,
-          300000
-        );
-        console.log(__res);
-      } else {
-        console.log("!No address found");
-      }
+    if (_type[i] == 'CFD' || _type[i] == 'FX') {
+
+      return true;
     }
+
+  }
+  return false;
+}
+
+
+
+
+function splitSymbol(symbol) {
+  return symbol.split(".");
+}
+
+
+
+
+
+
+function flipChar(char) {
+  if (char == 'L')
+    return 'S';
+  else {
+    return 'L';
   }
 }
 
-
-
-async function mintNewToken(name, amount,userAddress) {
- console.log(userAddress);
-  if (userAddress !== undefined) {
-    let wallet = new ethers.Wallet(account_from.privateKey, provider);
-    if (fContractInfo.factoryAddress) {
-      let contract = new ethers.Contract(
-        fContractInfo.factoryAddress,
-        fContractInfo.factoryABI,
-        wallet
-      );
-      let res = await contract.getAddressByName(name);
-      if (res) {
-        console.log(res);
-        let tokenContract = new ethers.Contract(
-          res,
-          tContractInfo.tokenABI,
-          wallet
-        );
-        let _res = await tokenContract.decimal();
-        const gweiValue = ethers.utils.parseUnits(
-          amount.toString(),
-          _res.toNumber()
-        );
-        console.log(gweiValue);
-        let mintTokenRes = await tokenContract.mint(
-          userAddress.toString(),
-          gweiValue
-        );
-        let __res = await provider.waitForTransaction(
-          mintTokenRes.hash,
-          1,
-          300000
-        );
-        console.log(__res);
-      } else {
-        console.log("!No address found");
-      }
-    }
-  }
-}
-
-async function createNewAndMint(name,symbol,amount,decimal,userAddress,instrumentType) {
-  createNewToken(name, symbol, decimal,instrumentType)
-    .then((value) => {
-    return  mintNewToken(name, amount, userAddress);
-    });
+function getside(side) {
+  if (side == 'SELL')
+    return 0
+  else
+    return 1;
 }
 
 
 
-
-
-
-
-
-
-
-
-
-export {
-  createNewToken,
-  mintNewToken,
-  burnTokens,
-  userValidation,
-  getTokenAddress,
-  createNewAndMint,
-};
 
 

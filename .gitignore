@@ -1,3 +1,4 @@
 node_modules
 .env
-src/routes/help.txt
+help.txt
+src/routes/extra.txt

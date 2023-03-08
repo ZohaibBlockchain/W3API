@@ -1,42 +1,96 @@
-import { createNewToken, userValidation, getTokenAddress, createNewAndMint, mintNewToken, burnTokens } from '../web3';
-import { UserModel, TokenModel, TradeModel ,defaultIconModel} from '../../schemas';
+import {
+  getInstrument, checkAddress, nonLeverageTradeManager, LeverageTradeManager
+} from "../web3";
 
 
+import { checkLeverageInstruments } from "../../helperFx"
+
+import {
+  UserModel,
+  TokenModel,
+  TradeModel,
+  defaultIconModel,
+} from "../../schemas";
+import { ethers } from "ethers";
 
 
 
 
 //---------DBFunction----------
-export async function userExits(_userUId) {
-    return await UserModel.countDocuments({ "userUId": _userUId });
-  }
-  
-  
-  export async function AddNewUser(userData) {
-    const NewUser = new UserModel({ userUId: userData.uid, userWallet: userData.wallet });
-   return await NewUser.save();
-  }
-  
+export async function userExits(wallet) {
+  return await UserModel.countDocuments({ userWallet: wallet });
+}
 
-  export async function UpdateUserWallet(userData) {
-  let result = await UserModel.findOneAndUpdate({userUId:userData._id},{$set:{userWallet:userData.address}});
+
+
+export async function getUserInstrumentSettings(wallet, symbol) {
+
+  return await UserModel.findOne({ userWallet: wallet });
+}
+
+
+
+
+export async function AddNewUser(userData) {
+  const NewUser = new UserModel({
+    userWallet: userData.wallet,
+    Instruments: userData.instruments,
+  });
+  return await NewUser.save();
+}
+
+
+
+
+export async function UpdateUserData(newInstruments,id) {
+  let result = await UserModel.findByIdAndUpdate(id,{Instruments: newInstruments});
   return result;
+}
+
+
+
+export async function UpdateUserWallet(userData) {
+  let result = await UserModel.findOneAndUpdate({ userUId: userData._id },{ $set: { userWallet: userData.address } });
+  return result;
+}
+
+
+
+
+
+
+
+export async function registerTrade(info) {
+  try {
+
+
+    let count = await TradeModel.countDocuments({ orderId: info.orderId });
+    let execCount = await TradeModel.countDocuments({ execID: info.execID });
+
+    if (count == 0 && execCount == 0) {
+      const newTrade = new TradeModel({
+        walletAddress: info.walletAddress,
+        tokenAmount: info.tokenAmount,
+        tokenSymbol: info.tokenSymbol,
+        instrumentType: info.instrumentType,
+        side: info.side,
+        contractMultiplier: info.contractMultiplier,
+        instrumentName: info.instrumentName,
+        transactionHash: "0x00",
+        orderID: info.orderID,
+        execID: info.execID,
+      });
+
+      let x = await newTrade.save();
+      return { result: 'Unique', value: x };
+    }
+    else {
+      return { result: 'Already exits', value: 'x' };
+    }
+  } catch (error) {
+    return { result: 'error', value: 'x' };
   }
-
-
-
-  export async function registerTrade(info) {
-    const newTrade = new TradeModel({ userId: info.uid, walletAddress: info.walletAddress, tokenAmount: info.tokenAmount, tokenName: info.tokenName, instrumentType: info.instrumentType, completed: false,tokenSymbol:info.tokenSymbol,transactionHash:""});
-    newTrade.save().then(() => {
-      console.log('New Trade Added');
-      return true;
-    });
-  }
-
-
-  export async function checkWalletExistence(address) {
-    return await UserModel.countDocuments({userWallet:address});
-  }
+}
 
 
 
@@ -46,63 +100,59 @@ export async function userExits(_userUId) {
 
 
 
+export async function ExeTrade() {
+  try {
+    let count = await TradeModel.countDocuments({ transactionHash: "0x00" });
+    if (count > 0) {
+      let trade = await TradeModel.findOne({ transactionHash: "0x00" });
 
-
-
-
-
-
-
-  // export async function tokenRegister(info) {
-  //   const newToken = new TokenModel({name:info.name,instrumentType:info.instrumentType,address:info.address,})
-  //   newTrade.save().then(() => {
-  //     console.log('New Trade Added');
-  //     return true;
-  //   });
-  // }
-
-
-  export async function createDefaultIcon(uri) {
-    
-    
-    const newIcon = new defaultIconModel({iconuri:uri});
-    let amount = await newIcon.collection.countDocuments();
-    if(amount < 1)
-    {
-       let ico = await newIcon.save();
-       return {status:'Created new'};
+      let addresses = await getInstrument(trade);
+      let pending = await TradeModel.updateOne({ _id: trade._id }, { transactionHash: 'Pending' });
+      if (pending)//Pending write sucessfully
+      {
+        let tx = await LeverageTradeManager(trade, addresses);
+        let r = await TradeModel.updateOne({ _id: trade._id }, { transactionHash: tx });
+        return r;
+      } else {
+        throw 'DB Issue occur while writing';
       }
-    else{
-      return {status:'Icon Already Created'};
+    } else {
+      return 'No Transaction right Now!';
     }
-    }
-  
+  }
+  catch (error) {
+
+  }
+}
 
 
 
-//   export async function checkCount(collectionName) {
-//     let col = db.collection(collectionName);
-//     const count = await col.countDocuments()
-//     console.log(count);
-//     return count;
-//   }
-  
-  
-//   export async function deleteDocument(collectionName, id) {
-//     let col = db.collection(collectionName);
-//     return await col.deleteOne({ _id: id });
-//   }
-  
-  
-//   export async function updateDocument(args) {
-//     let col = db.collection(args.collectionName);
-//     console.log(col.name);
-//     return await col.findOneAndUpdate({_id:x},{$set:{transactionHash:args.transactionHash}});
-//   }
-  
-  
-  
-  
-  
-  //---------DBFunction----------
-  
+
+
+
+export async function tokenDetail(inf) {
+  let userTokenData = [];
+  let count = await UserModel.countDocuments({ userWallet: inf.walletAddress });
+  let user = await UserModel.findOne({ userWallet: inf.walletAddress })
+  if (checkLeverageInstruments(inf.symbol))//Leverage Instrument
+  {
+    let getTokenValue = getInstrumentValue(user, inf.symbol);
+
+  } else {
+
+  }
+}
+
+
+
+function getInstrumentValue(user, symbol) {
+  let value = 1;
+  user.Instruments.forEach(element => {
+    if (element.name === symbol);
+    value = element.value;
+    return value;
+  });
+  return value;
+}
+
+//---------DBFunction----------

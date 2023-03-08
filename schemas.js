@@ -5,9 +5,11 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const user = new Schema({
-  userUId: {type:String,unique: true},
   userWallet: {type:String,unique: true},
+  Instruments:{type: [Object]}
 });
+
+
 
 const token = new Schema({
   name: String,
@@ -17,20 +19,24 @@ const token = new Schema({
  
 });
 
-
 const defaultIcon = new Schema({
 iconuri: {type:String ,required:true}
 });
 
+
+
+
 const trade = new Schema({
-  userId: String,
-  walletAddress: String,
-  tokenAmount: Number,
-  tokenName:String,
-  tokenSymbol:String,
-  instrumentType:String,
-  completed:Boolean,
-  transactionHash:String,
+  walletAddress: {type:String ,required:true},
+  tokenAmount: {type:Number ,required:true},
+  tokenSymbol:{type:String ,required:true},
+  instrumentType:{type:String ,required:true},
+  instrumentName:{type:String ,required:true},
+  side:{type:String ,required:true},
+  contractMultiplier:{type:Number ,required:true},
+  transactionHash:{type:String ,required:true},
+  orderID:{type:String ,required:true},
+  execID:{type:String ,required:true},
   time : { type : Date, default: Date.now }
 });
 
