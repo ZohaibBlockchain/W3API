@@ -133,7 +133,7 @@ router.post("/tradeUpdate", async (req, res) => {
 
     console.log(req.body);
     let InfArray = [];
-    InfArray.push(req.body.msg);
+    InfArray.push(req.body.Message);
     let Data = getNames(InfArray)[0];
     let trade = await registerTrade({
       walletAddress: Data.fullInfo.PartyID,
