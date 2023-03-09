@@ -9,10 +9,11 @@ export function getNames(dataArr) {
     for (let i = 0; i < dataArr.length; i++) {
         NamesArr[i] = parse(dataArr[i], '^');
         let Data = NamesArr[i].Body;
-        console.log(Data);
+       
         NamesArr[i] = NamesArr[i].Body.Symbol;
         let v = (detectInstrument(NamesArr[i]));
-        NamesArr[i] = { Name: updateName(Data.Symbol, Data.Side, v.type), Symbol: v.name, type: v.type, fullInfo: Data };
+        NamesArr[i] = { Name: updateName(Data.Symbol, Data.Side, v.type), Symbol: v.name, type: v.type, fullInfo: Data};
+        console.log(NamesArr);
     }
     return NamesArr;
 }
