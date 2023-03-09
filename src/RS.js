@@ -7,10 +7,10 @@ const mongoose = require("mongoose");
 require("dotenv").config();
 import { router } from "./routes/routes";
 
-const decimal = 6;
+
 const ip = require("ip");
 const ipAddress = ip.address();
-const mongoDB = process.env.DBKEY.toString();
+
 
 mongoose
   .connect(process.env.DBKEY, { useNewUrlParser: true })
