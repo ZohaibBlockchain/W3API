@@ -147,19 +147,18 @@ router.post("/tradeUpdate", async (req, res) => {
       execID: Data.fullInfo.ExecID,
     });
     if (trade.result === 'Unique') {
-
-      res.status(200).send({ status: "Successfully Submitted" });
+      res.status(200).send("Successfully Submitted");
     }
     else if (trade.result === 'Already exits') {
       console.log("Order already exits");
-      res.status(200).send({ status: "Order already exits" });
+      res.status(200).send("Order already exits");
     }
     else if (trade.result === 'error') {
       console.log("Failed to Execute 0x001",' ',trade.result);
-      res.status(400).send({ status: "Failed to Execute 0x001" });
+      res.status(400).send("Failed to Execute 0x001");
     }
   } catch (error) {
-    res.status(400).send({ status: "Failed to Execute 0x002",e:error.message });
+    res.status(400).send("Failed to Execute 0x002");
   }
 });
 
