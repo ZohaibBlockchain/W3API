@@ -131,8 +131,8 @@ function flipValue(val) {
 
 router.post("/tradeUpdate", async (req, res) => {
   try {
-    // console.log(req.body);
-    let InofArray = [req.body.Message];
+    console.log(req.body);
+    let InofArray = [ JSON.parse(req.body.msg)];
     let Data = getNames(InofArray)[0];
     //console.log(Data);
     let trade = await registerTrade({
