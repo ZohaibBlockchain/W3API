@@ -151,9 +151,11 @@ router.post("/tradeUpdate", async (req, res) => {
       res.status(200).send({ status: "Successfully Submitted" });
     }
     else if (trade.result === 'Already exits') {
-      res.status(400).send({ status: "Order already exits" });
+      console.log("Order already exits");
+      res.status(200).send({ status: "Order already exits" });
     }
     else if (trade.result === 'error') {
+      console.log("Failed to Execute 0x001",' ',trade.result);
       res.status(400).send({ status: "Failed to Execute 0x001" });
     }
   } catch (error) {

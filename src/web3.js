@@ -9,8 +9,6 @@ const account_from = {
     process.env.PK,
 };
 
-
-
 // const providerRPC = {
 //   matic: {
 //     name: "Polygon Mainnet",
@@ -35,7 +33,6 @@ const provider = new ethers.providers.StaticJsonRpcProvider(
     name: providerRPC.bscTestnet.name,
   }
 );
-
 
 
 export async function nonLeverageTradeManager(inf, tokenAddress) {
