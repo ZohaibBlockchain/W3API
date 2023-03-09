@@ -130,6 +130,8 @@ function flipValue(val) {
 
 router.post("/tradeUpdate", async (req, res) => {
   try {
+
+    console.log(req.body);
     let InfArray = [];
     InfArray.push(req.body.msg);
     let Data = getNames(InfArray)[0];
