@@ -9,9 +9,10 @@ export function getNames(dataArr) {
     for (let i = 0; i < dataArr.length; i++) {
         NamesArr[i] = parse(dataArr[i], '^');
         let Data = NamesArr[i].Body;
+        console.log(Data);
         NamesArr[i] = NamesArr[i].Body.Symbol;
-        let v = (detectInstrument( NamesArr[i]));
-        NamesArr[i] = { Name: updateName(Data.Symbol, v.type), Symbol: v.name, type: v.type, fullInfo: Data };
+        let v = (detectInstrument(NamesArr[i]));
+        NamesArr[i] = { Name: updateName(Data.Symbol, Data.Side, v.type), Symbol: v.name, type: v.type, fullInfo: Data };
     }
     return NamesArr;
 }
@@ -19,7 +20,9 @@ export function getNames(dataArr) {
 
 
 export function detectInstrument(InstrumentSymbol) {
+
     let Instrument = splitSymbol(InstrumentSymbol);
+
     switch (Instrument[0]) {
         case 'CFD':
             for (let i = 0; i < CFDInstruments.length; i++) {
@@ -28,13 +31,13 @@ export function detectInstrument(InstrumentSymbol) {
                         let name = Instrument[2] + '.' + Instrument[3];
                         return { name: name, type: Instrument[0] + '.' + Instrument[1] };
                     }
-                    else if(Instrument.length == 3) {
+                    else if (Instrument.length == 3) {
                         let name = Instrument[2];
                         return { name: name, type: Instrument[0] + '.' + Instrument[1] };
                     }
-                    else if(Instrument.length == 2) {
+                    else if (Instrument.length == 2) {
                         let name = Instrument[1];
-                        return { name: name, type: Instrument[0]};
+                        return { name: name, type: Instrument[0] };
                     }
                 }
             }
@@ -43,13 +46,13 @@ export function detectInstrument(InstrumentSymbol) {
                 let name = Instrument[2] + '.' + Instrument[3];
                 return { name: name, type: Instrument[0] + '.' + Instrument[1] };
             }
-            else if(Instrument.length == 3) {
+            else if (Instrument.length == 3) {
                 let name = Instrument[2];
                 return { name: name, type: Instrument[0] + '.' + Instrument[1] };
             }
-            else if(Instrument.length == 2) {
+            else if (Instrument.length == 2) {
                 let name = Instrument[1];
-                return { name: name, type: Instrument[0]};
+                return { name: name, type: Instrument[0] };
             }
 
             break;
@@ -97,10 +100,6 @@ function updateName(name, side, type) {
     garbage.forEach(element => {
         name = name.replace(element, '');
     });
-
-
-
-
     if (checkLeverageInstruments(type)) {
         if (side == 'BUY') {
             name += '.L';
@@ -140,24 +139,3 @@ export function checkType(symbol) {
     }
 }
 
-
-// function rectifyInfo(name, side) {
-//     garbage.forEach(element => {
-//         name = name.replace(element, '');
-//     });
-
-//     if (side == 'X')
-//         return name;
-//     else if (side == 'BUY') {
-//         name += '.L';
-//     }
-//     else {
-//         name += '.S';
-//     }
-//     return name
-// }
-// export function getInstrumentType(symbol, Side) {
-
-//     let x = splitSymbol(symbol);
-//     let v = (detectInstrument(x, Side));
-// }

@@ -104,7 +104,6 @@ router.post("/tokendetails", async (req, res) => {
 });
 
 
-
 async function updateTokenInfo(arr, symbol, id) {
   for (let i = 0; i < arr.length; i++) {
     if (arr[i].Name == symbol) {
@@ -131,11 +130,9 @@ function flipValue(val) {
 
 router.post("/tradeUpdate", async (req, res) => {
   try {
-    console.log(req.body);
-    console.log('Got Hit!');
-    let InofArray = [ JSON.parse(req.body.msg)];
-    let Data = getNames(InofArray)[0];
-    //console.log(Data);
+    let InfArray = [];
+    InfArray.push(req.body.msg);
+    let Data = getNames(InfArray)[0];
     let trade = await registerTrade({
       walletAddress: Data.fullInfo.PartyID,
       tokenAmount: Data.fullInfo.OrderQty,
@@ -155,10 +152,10 @@ router.post("/tradeUpdate", async (req, res) => {
       res.status(400).send({ status: "Order already exits" });
     }
     else if (trade.result === 'error') {
-      res.status(400).send({ status: "Failed to Execute" });
+      res.status(400).send({ status: "Failed to Execute 0x001" });
     }
   } catch (error) {
-    res.status(400).send({ status: "Failed to Execute" });
+    res.status(400).send({ status: "Failed to Execute 0x002",e:error.message });
   }
 });
 
