@@ -62,11 +62,8 @@ export async function UpdateUserWallet(userData) {
 
 export async function registerTrade(info) {
   try {
-
-
-    let count = await TradeModel.countDocuments({ orderId: info.orderId });
+    let count = await TradeModel.countDocuments({ orderID: info.orderID });
     let execCount = await TradeModel.countDocuments({ execID: info.execID });
-
     if (count == 0 && execCount == 0) {
       const newTrade = new TradeModel({
         walletAddress: info.walletAddress,
