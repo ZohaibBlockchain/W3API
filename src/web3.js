@@ -1,6 +1,5 @@
 import "ethers";
 import { ethers } from "ethers";
-import { formatEther, formatUnits } from "ethers/lib/utils";
 const fContractInfo = require("./contractABI/factory.json");
 const tContractInfo = require("./contractABI/token.json");
 require('dotenv').config();
