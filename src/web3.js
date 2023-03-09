@@ -70,7 +70,7 @@ export async function LeverageTradeManager(inf, tokens) {
       fContractInfo.factoryABI,
       wallet
     );
-    let tx = await contract.tradeLeverage(tokenAddresses[0], tokenAddresses[1], inf.walletAddress,ethers.utils.parseUnits((inf.tokenAmount,6)).toString(), getside(inf.side), inf.orderID);
+    let tx = await contract.tradeLeverage(tokenAddresses[0], tokenAddresses[1], inf.walletAddress,ethers.utils.parseUnits((inf.tokenAmount,Mwei)), getside(inf.side), inf.orderID);
     let receipt = await tx.wait();
     return receipt.logs[0].transactionHash;
   }
