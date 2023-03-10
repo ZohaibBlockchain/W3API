@@ -152,6 +152,10 @@ router.post("/tradeUpdate", async (req, res) => {
       console.log("Order already exits");
       res.status(200).send("Order already exits");
     }
+    else if (trade.result === 'Cannot Process Physical Instruments') {
+      console.log("Cannot Process Physical Instruments");
+      res.status(200).send("CPPI");
+    }
     else if (trade.result === 'error') {
       console.log("Failed to Execute 0x001",' ',trade.result);
       res.status(400).send("Failed to Execute 0x001");
