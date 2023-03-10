@@ -82,7 +82,8 @@ export async function registerTrade(info) {
         return { result: 'Unique', value: x };
       }
       else {
-        return { result: 'Cannot Process Physical Instruments', value: 'x' };
+        console.log('Here!');
+        return {result: 'Cannot Process Physical Instruments', value: 'x' };
       }
     }
     else {
