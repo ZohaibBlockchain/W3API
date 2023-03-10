@@ -33,7 +33,7 @@ router.get("/", (req, res) => {
 
 router.post("/tokendetails", async (req, res) => {
 
-
+  console.log(req.body);
   //requirement Symbol and walletAddress,Type
   try {
     let inf = req.body;
@@ -134,7 +134,6 @@ router.post("/tradeUpdate", async (req, res) => {
     let InfArray = [];
     InfArray.push(req.body.Message);
     let Data = getNames(InfArray)[0];
-    console.log(Data);
     let trade = await registerTrade({
       walletAddress: Data.fullInfo.PartyID,
       tokenAmount: Data.fullInfo.OrderQty,
