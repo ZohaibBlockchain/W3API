@@ -114,7 +114,7 @@ function updateName(name, side, type) {
 
 
 
-function checkLeverageInstruments(type) {
+export function checkLeverageInstruments(symbol) {
 
     let _type = splitSymbol(type);
     for (let i = 0; i < _type.length; i++) {

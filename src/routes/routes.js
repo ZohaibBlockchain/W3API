@@ -10,7 +10,7 @@ import {
 } from "../db/db";
 import express from "express";
 export const router = express.Router();
-import { getNames, checkType, detectInstrument } from "../../helperFx";
+import { getNames, checkType, detectInstrument,checkLeverageInstruments} from "../../helperFx";
 
 import {
   getInstrument,
@@ -130,7 +130,6 @@ function flipValue(val) {
 
 router.post("/tradeUpdate", async (req, res) => {
   try {
-
     console.log(req.body);
     let InfArray = [];
     InfArray.push(req.body.Message);
@@ -146,7 +145,7 @@ router.post("/tradeUpdate", async (req, res) => {
       orderID: Data.fullInfo.OrderID,
       execID: Data.fullInfo.ExecID,
     });
-    if (trade.result === 'Unique') {
+    if (trade.result === 'Unique' ) {
       res.status(200).send("Successfully Submitted");
     }
     else if (trade.result === 'Already exits') {

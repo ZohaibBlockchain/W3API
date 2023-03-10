@@ -42,15 +42,15 @@ export async function AddNewUser(userData) {
 
 
 
-export async function UpdateUserData(newInstruments,id) {
-  let result = await UserModel.findByIdAndUpdate(id,{Instruments: newInstruments});
+export async function UpdateUserData(newInstruments, id) {
+  let result = await UserModel.findByIdAndUpdate(id, { Instruments: newInstruments });
   return result;
 }
 
 
 
 export async function UpdateUserWallet(userData) {
-  let result = await UserModel.findOneAndUpdate({ userUId: userData._id },{ $set: { userWallet: userData.address } });
+  let result = await UserModel.findOneAndUpdate({ userUId: userData._id }, { $set: { userWallet: userData.address } });
   return result;
 }
 
@@ -65,21 +65,25 @@ export async function registerTrade(info) {
     let count = await TradeModel.countDocuments({ orderID: info.orderID });
     let execCount = await TradeModel.countDocuments({ execID: info.execID });
     if (count == 0 && execCount == 0) {
-      const newTrade = new TradeModel({
-        walletAddress: info.walletAddress,
-        tokenAmount: info.tokenAmount,
-        tokenSymbol: info.tokenSymbol,
-        instrumentType: info.instrumentType,
-        side: info.side,
-        contractMultiplier: info.contractMultiplier,
-        instrumentName: info.instrumentName,
-        transactionHash: "0x00",
-        orderID: info.orderID,
-        execID: info.execID,
-      });
-
-      let x = await newTrade.save();
-      return { result: 'Unique', value: x };
+      if (info.instrumentType != 'CRYPTO' && info.instrumentType != 'EQ') {
+        const newTrade = new TradeModel({
+          walletAddress: info.walletAddress,
+          tokenAmount: info.tokenAmount,
+          tokenSymbol: info.tokenSymbol,
+          instrumentType: info.instrumentType,
+          side: info.side,
+          contractMultiplier: info.contractMultiplier,
+          instrumentName: info.instrumentName,
+          transactionHash: "0x00",
+          orderID: info.orderID,
+          execID: info.execID,
+        });
+        let x = await newTrade.save();
+        return { result: 'Unique', value: x };
+      }
+      else {
+        return { result: 'Cannot Process Physical Instruments', value: 'x' };
+      }
     }
     else {
       return { result: 'Already exits', value: 'x' };
