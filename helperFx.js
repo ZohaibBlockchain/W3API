@@ -21,7 +21,7 @@ export function getNames(dataArr) {
 export function detectInstrument(InstrumentSymbol) {
 
     let Instrument = splitSymbol(InstrumentSymbol);
-
+    console.log(Instrument);
     switch (Instrument[0]) {
         case 'CFD':
             for (let i = 0; i < CFDInstruments.length; i++) {
@@ -114,7 +114,7 @@ function updateName(name, side, type) {
 
 
 
-export function checkLeverageInstruments(symbol) {
+function checkLeverageInstruments(type) {
 
     let _type = splitSymbol(type);
     for (let i = 0; i < _type.length; i++) {
